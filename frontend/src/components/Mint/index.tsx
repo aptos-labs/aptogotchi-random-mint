@@ -19,7 +19,9 @@ const getAptogotchiByAddress = async (address: string): Promise<Pet> => {
     })
     .then((response) => {
       return {
-        parts: response[0] as PetParts,
+        live: response[0] as boolean,
+        health: response[1] as number,
+        parts: response[2] as PetParts,
       };
     });
 };
@@ -79,6 +81,7 @@ export function Mint() {
   const handleMint = async () => {
     if (!account || !network) return;
 
+    setMintSucceeded(false);
     setTransactionInProgress(true);
     setMyPet(undefined);
 
@@ -91,15 +94,18 @@ export function Mint() {
           functionArguments: [],
         },
       });
-      await aptosClient.waitForTransaction({
-        transactionHash: response.hash,
-      });
+      await aptosClient
+        .waitForTransaction({
+          transactionHash: response.hash,
+        })
+        .then(() => {
+          fetchPet();
+          setMintSucceeded(true);
+        });
     } catch (error: any) {
       console.error(error);
     } finally {
-      fetchPet();
       setTransactionInProgress(false);
-      setMintSucceeded(true);
     }
   };
 
