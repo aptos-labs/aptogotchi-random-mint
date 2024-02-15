@@ -270,12 +270,9 @@ module aptogotchi::main {
         check_randomness_commitment_exist_and_not_revealed(aptogotchi_address);
         let random_commitment_ext = borrow_global_mut<RandomnessCommitmentExt>(aptogotchi_address);
         if (random_commitment_ext.value == 0) {
-            // Reward path
             aptogotchi.health = aptogotchi.health + 1;
         } else {
-            // Punishment path
             aptogotchi.health = aptogotchi.health - 1;
-            // Conditionally run, so punishment path gas cost is always lower or equal to reward path
             if (aptogotchi.health == 0) {
                 aptogotchi.live = false;
             }
