@@ -33,8 +33,6 @@ module aptogotchi::main {
     const EAR_MAX_VALUE_EXCL: u8 = 6;
     // Face value range is [0, 4)
     const FACE_MAX_VALUE_EXCL: u8 = 4;
-    // maximum length of name
-    const NAME_UPPER_BOUND: u64 = 40;
     // default health of Aptogotchi at creation
     const DEFAULT_BEGINNING_HEALTH: u8 = 5;
 
