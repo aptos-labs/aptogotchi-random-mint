@@ -14,12 +14,4 @@
 
 ## Run move scripts
 
-Create gotchi.
-```shell
-./sh_scripts/move_run_script_create_gotchi.sh
-```
-
-Feed gotchi.
-```shell
-./sh_scripts/move_run_script_feed_gotchi.sh
-```
+We cannot run move script to create aptogotchi, cause we set entry function in the module to be private to prevent test and abort attack. 
