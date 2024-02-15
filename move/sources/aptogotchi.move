@@ -208,9 +208,9 @@ module aptogotchi::main {
     }
 
     // Make a random move for the Aptoaptogotchi.
-    // This function is only called from a transaction to prevent test and abort attack.
     // Depending on the random value, the Aptogotchi's health will increase or decrease.
     // We prevent undergasing attack by making sure the gas cost of both paths are equal or reward path is higher.
+    // This function is only called from a transaction to prevent test and abort attack.
     entry fun make_random_move(
         aptogotchi_address: address,
     ) acquires Aptogotchi {
@@ -259,8 +259,8 @@ module aptogotchi::main {
     }
 
     // Used together with make_random_move_commit to reveal the random value.
-    // Typically if user doesn't reveal cause it doesn't like the result, it cannot enter the next round of game
-    // In our case cannot make another move without revealing the previous move
+    // If user doesn't reveal cause it doesn't like the result, it cannot enter the next round of game
+    // In our case user cannot make another move without revealing the previous move
     // This function is only called from a transaction to prevent test and abort attack.
     entry fun make_random_move_reveal(
         aptogotchi_address: address,
