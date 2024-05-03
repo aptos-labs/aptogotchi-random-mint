@@ -122,6 +122,7 @@ module aptogotchi::main {
     // Because this function calls random it must not be public.
     // This ensures user can only call it from a transaction instead of another contract.
     // This prevents users seeing the result of mint and act on it, e.g. see the result and abort the tx if they don't like it.
+    #[randomness]
     entry fun create_aptogotchi(user: &signer) acquires CollectionCapability, MintAptogotchiEvents {
         create_aptogotchi_internal(user);
     }
@@ -209,6 +210,7 @@ module aptogotchi::main {
     // Depending on the random value, the Aptogotchi's health will increase or decrease.
     // We prevent undergasing attack by making sure the gas cost of both paths are equal or reward path is higher.
     // This function is only called from a transaction to prevent test and abort attack.
+    #[randomness]
     entry fun make_random_move(
         aptogotchi_address: address,
     ) acquires Aptogotchi {
@@ -234,6 +236,7 @@ module aptogotchi::main {
 
     // This prevents undergasing attack by committing it first.
     // This function is only called from a transaction to prevent test and abort attack.
+    #[randomness]
     entry fun make_random_move_commit(aptogotchi_address: address) acquires Aptogotchi, RandomnessCommitmentExt {
         check_aptogotchi_exist_and_live(aptogotchi_address);
         let exist_randomness_commitment_ext = exists<RandomnessCommitmentExt>(aptogotchi_address);
