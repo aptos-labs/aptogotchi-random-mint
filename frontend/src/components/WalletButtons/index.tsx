@@ -27,7 +27,7 @@ export const WalletButtons = () => {
     );
   }
 
-  if (isLoading || !wallets[0]) {
+  if (isLoading || wallets && !wallets[0]) {
     return (
       <div className={cn(buttonStyles, "opacity-50 cursor-not-allowed")}>
         Loading...
