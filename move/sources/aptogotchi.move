@@ -1,5 +1,4 @@
-module aptogotchi::main {
-    use aptos_framework::account;
+module aptogotchi_addr::main {
     use aptos_framework::event;
     use aptos_framework::object;
     use aptos_framework::object::ExtendRef;
@@ -56,10 +55,7 @@ module aptogotchi::main {
         value: u8,
     }
 
-    struct MintAptogotchiEvents has key {
-        mint_aptogotchi_events: event::EventHandle<MintAptogotchiEvent>,
-    }
-
+    #[event]
     struct MintAptogotchiEvent has drop, store {
         aptogotchi_address: address,
         token_name: String,
@@ -80,10 +76,6 @@ module aptogotchi::main {
         let extend_ref = object::generate_extend_ref(&constructor_ref);
         let app_signer = &object::generate_signer(&constructor_ref);
 
-        move_to(account, MintAptogotchiEvents {
-            mint_aptogotchi_events: account::new_event_handle<MintAptogotchiEvent>(account),
-        });
-
         move_to(app_signer, CollectionCapability {
             extend_ref,
         });
@@ -92,7 +84,7 @@ module aptogotchi::main {
     }
 
     fun get_collection_address(): address {
-        object::create_object_address(&@aptogotchi, APP_OBJECT_SEED)
+        object::create_object_address(&@aptogotchi_addr, APP_OBJECT_SEED)
     }
 
     fun get_collection_signer(collection_address: address): signer acquires CollectionCapability {
@@ -122,11 +114,12 @@ module aptogotchi::main {
     // Because this function calls random it must not be public.
     // This ensures user can only call it from a transaction instead of another contract.
     // This prevents users seeing the result of mint and act on it, e.g. see the result and abort the tx if they don't like it.
-    entry fun create_aptogotchi(user: &signer) acquires CollectionCapability, MintAptogotchiEvents {
+    #[randomness]
+    entry fun create_aptogotchi(user: &signer) acquires CollectionCapability {
         create_aptogotchi_internal(user);
     }
 
-    fun create_aptogotchi_internal(user: &signer): address acquires CollectionCapability, MintAptogotchiEvents {
+    fun create_aptogotchi_internal(user: &signer): address acquires CollectionCapability {
         let body = randomness::u8_range(0, BODY_MAX_VALUE_EXCL);
         let ear = randomness::u8_range(0, EAR_MAX_VALUE_EXCL);
         let face = randomness::u8_range(0, FACE_MAX_VALUE_EXCL);
@@ -171,8 +164,7 @@ module aptogotchi::main {
         move_to(token_signer_ref, aptogotchi);
 
         // Emit event for minting Aptogotchi token
-        event::emit_event<MintAptogotchiEvent>(
-            &mut borrow_global_mut<MintAptogotchiEvents>(@aptogotchi).mint_aptogotchi_events,
+        event::emit<MintAptogotchiEvent>(
             MintAptogotchiEvent {
                 aptogotchi_address: address_of(token_signer_ref),
                 token_name,
@@ -209,6 +201,7 @@ module aptogotchi::main {
     // Depending on the random value, the Aptogotchi's health will increase or decrease.
     // We prevent undergasing attack by making sure the gas cost of both paths are equal or reward path is higher.
     // This function is only called from a transaction to prevent test and abort attack.
+    #[randomness]
     entry fun make_random_move(
         aptogotchi_address: address,
     ) acquires Aptogotchi {
@@ -234,6 +227,7 @@ module aptogotchi::main {
 
     // This prevents undergasing attack by committing it first.
     // This function is only called from a transaction to prevent test and abort attack.
+    #[randomness]
     entry fun make_random_move_commit(aptogotchi_address: address) acquires Aptogotchi, RandomnessCommitmentExt {
         check_aptogotchi_exist_and_live(aptogotchi_address);
         let exist_randomness_commitment_ext = exists<RandomnessCommitmentExt>(aptogotchi_address);
@@ -331,14 +325,14 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
     fun test_create_aptogotchi(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires CollectionCapability, MintAptogotchiEvents, Aptogotchi {
+    ) acquires CollectionCapability, Aptogotchi {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         let (live, health, _) = get_aptogotchi(aptogotchi_address);
@@ -348,14 +342,14 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
     fun test_move_happy_path(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires Aptogotchi, CollectionCapability, MintAptogotchiEvents {
+    ) acquires Aptogotchi, CollectionCapability {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         make_random_move(aptogotchi_address);
@@ -368,10 +362,10 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
-    #[expected_failure(abort_code = EAPTOGOTCHI_NOT_EXIST, location = aptogotchi::main)]
+    #[expected_failure(abort_code = EAPTOGOTCHI_NOT_EXIST, location = aptogotchi_addr::main)]
     fun test_cannot_move_when_aptogotchi_not_exist(
         fx: &signer,
         account: &signer,
@@ -384,15 +378,15 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
-    #[expected_failure(abort_code = EDEAD_APTOGOTCHI_CANNOT_MOVE, location = aptogotchi::main)]
+    #[expected_failure(abort_code = EDEAD_APTOGOTCHI_CANNOT_MOVE, location = aptogotchi_addr::main)]
     fun test_cannot_move_dead_aptogotchi(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires Aptogotchi, CollectionCapability, MintAptogotchiEvents {
+    ) acquires Aptogotchi, CollectionCapability {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         // Initial health is 5, so we make 5 random moves to decrease health to 0 and kill the Aptogotchi
@@ -407,15 +401,15 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
-    #[expected_failure(abort_code = EALREADY_COMMITTED, location = aptogotchi::main)]
+    #[expected_failure(abort_code = EALREADY_COMMITTED, location = aptogotchi_addr::main)]
     fun test_cannot_commit_randomness_twice(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires Aptogotchi, CollectionCapability, MintAptogotchiEvents, RandomnessCommitmentExt {
+    ) acquires Aptogotchi, CollectionCapability, RandomnessCommitmentExt {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         make_random_move_commit(aptogotchi_address);
@@ -424,15 +418,15 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
-    #[expected_failure(abort_code = ERANDOMNESS_COMMITMENT_NOT_EXIST, location = aptogotchi::main)]
+    #[expected_failure(abort_code = ERANDOMNESS_COMMITMENT_NOT_EXIST, location = aptogotchi_addr::main)]
     fun test_cannot_reveal_without_commit_first(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires Aptogotchi, CollectionCapability, MintAptogotchiEvents, RandomnessCommitmentExt {
+    ) acquires Aptogotchi, CollectionCapability, RandomnessCommitmentExt {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         make_random_move_reveal(aptogotchi_address)
@@ -440,15 +434,15 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
-    #[expected_failure(abort_code = EALREADY_REVEALED, location = aptogotchi::main)]
+    #[expected_failure(abort_code = EALREADY_REVEALED, location = aptogotchi_addr::main)]
     fun test_cannot_reveal_twice(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires Aptogotchi, CollectionCapability, MintAptogotchiEvents, RandomnessCommitmentExt {
+    ) acquires Aptogotchi, CollectionCapability, RandomnessCommitmentExt {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         make_random_move_commit(aptogotchi_address);
@@ -459,14 +453,14 @@ module aptogotchi::main {
 
     #[test(
         fx = @aptos_framework,
-        account = @aptogotchi,
+        account = @aptogotchi_addr,
         creator = @0x123
     )]
     fun test_commit_and_reveal_move_happy_path(
         fx: &signer,
         account: &signer,
         creator: &signer
-    ) acquires Aptogotchi, CollectionCapability, MintAptogotchiEvents, RandomnessCommitmentExt {
+    ) acquires Aptogotchi, CollectionCapability, RandomnessCommitmentExt {
         setup_test(fx, account, creator);
         let aptogotchi_address = create_aptogotchi_internal(creator);
         make_random_move_commit(aptogotchi_address);

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { NEXT_PUBLIC_CONTRACT_ADDRESS } from "@/utils/env";
 import { getAptosClient } from "@/utils/aptosClient";
 import { PetImage, QuestionMarkImage } from "@/components/Pet";
 import { Pet, PetParts } from "../Pet";
 import { padAddressIfNeeded } from "@/utils/address";
 import Confetti from "react-confetti";
+import { ABI } from "@/utils/abi";
 
 const aptosClient = getAptosClient();
 
@@ -13,7 +13,7 @@ const getAptogotchiByAddress = async (address: string): Promise<Pet> => {
   return aptosClient
     .view({
       payload: {
-        function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::get_aptogotchi`,
+        function: `${ABI.address}::main::get_aptogotchi`,
         functionArguments: [address],
       },
     })
@@ -39,7 +39,7 @@ export function Mint() {
 
     const aptogotchiCollectionAddressResponse = (await aptosClient.view({
       payload: {
-        function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::get_aptogotchi_collection_address`,
+        function: `${ABI.address}::main::get_aptogotchi_collection_address`,
       },
     })) as [`0x${string}`];
 
@@ -89,9 +89,12 @@ export function Mint() {
       const response = await signAndSubmitTransaction({
         sender: account.address,
         data: {
-          function: `${NEXT_PUBLIC_CONTRACT_ADDRESS}::main::create_aptogotchi`,
+          function: `${ABI.address}::main::create_aptogotchi`,
           typeArguments: [],
           functionArguments: [],
+        },
+        options: {
+          maxGasAmount: 10000,
         },
       });
       await aptosClient
