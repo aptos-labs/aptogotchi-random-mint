@@ -8,11 +8,10 @@ import { Modal } from "@/components/Modal";
 
 export function Connected() {
   const { network } = useWallet();
-
   return (
     <div className="flex flex-col gap-3 p-3">
       {network?.name.toLowerCase() !==
-        NetworkToNetworkName[Network.DEVNET].toLowerCase() && <Modal />}
+        NetworkToNetworkName[Network.TESTNET].toLowerCase() && <Modal />}
       <Mint />
     </div>
   );
