@@ -12,11 +12,10 @@
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.13.3",
-    "@aptos-labs/wallet-adapter-react": "^3.0.2",
+    "@aptos-labs/wallet-adapter-react": "^2.1.7",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@radix-ui/react-dialog": "^1.0.5",
-    "aptos": "^1.21.0",
     "autoprefixer": "10.4.14",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.0",

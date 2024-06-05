@@ -12,8 +12,8 @@ PUBLISHER_ADDR=0x$(aptos config show-profiles --profile=$PUBLISHER_PROFILE | gre
 
  OUTPUT=$(aptos move create-object-and-publish-package \
    --address-name aptogotchi_addr \
-   --profile $PUBLISHER_PROFILE \
    --named-addresses aptogotchi_addr=$PUBLISHER_ADDR \
+   --profile $PUBLISHER_PROFILE \
  	--assume-yes)
 
  # Extract the deployed contract address and save it to a file
