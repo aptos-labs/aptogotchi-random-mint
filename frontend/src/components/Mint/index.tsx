@@ -93,9 +93,6 @@ export function Mint() {
           typeArguments: [],
           functionArguments: [],
         },
-        options: {
-          maxGasAmount: 10000,
-        },
       });
       await aptosClient
         .waitForTransaction({
